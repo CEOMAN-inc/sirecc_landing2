@@ -267,7 +267,8 @@ const ConstructionScene3D = ({ scrollProgress = 0, className = "" }) => {
           <UrbanBackdrop />
           <FloatingParticles />
 
-          {/* 3D Text */}
+          {/* 3D Text - CORRECTION: This block is commented out to prevent the crash */}
+          {/*
           <Center position={[-5, 2, 5]}>
             <Float speed={2} rotationIntensity={0.3} floatIntensity={1}>
               <Text3D
@@ -290,6 +291,7 @@ const ConstructionScene3D = ({ scrollProgress = 0, className = "" }) => {
               </Text3D>
             </Float>
           </Center>
+          */}
 
           {/* Environment */}
           <Environment preset="night" />

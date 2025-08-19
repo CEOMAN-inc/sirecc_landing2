@@ -24,7 +24,7 @@ const TestimonialsSection = () => {
       name: 'María Elena Rodríguez',
       position: 'Gerente de Proyectos',
       company: 'Constructora Valle Verde',
-      avatar: 'https://images.pixabay.com/photo/2017/06/26/02/47/man-2442565_1280.jpg',
+      avatar: '/assets/images/commercial-project.jpg',
       content: `La experiencia trabajando con SIRECC en nuestro centro comercial fue extraordinaria. Su capacidad para manejar proyectos complejos y su innovación tecnológica nos permitió entregar un espacio comercial de clase mundial.\n\nDefinitivamente los recomendamos para proyectos de gran envergadura.`,
       rating: 5,
       project: 'Centro Comercial Plaza Norte',

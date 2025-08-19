@@ -20,7 +20,7 @@ const ServicesPreview = () => {
       title: 'Proyectos Comerciales',
       description: 'Centros comerciales, oficinas y espacios corporativos que impulsan el crecimiento empresarial y comercial.',
       icon: 'Building',
-      image: 'https://images.pixabay.com/photo/2017/07/09/03/19/home-2486092_1280.jpg',
+      image: '/assets/images/commercial-project.jpg', 
       features: ['Espacios funcionales', 'Tecnología integrada', 'Eficiencia energética'],
       color: 'from-accent to-accent/80'
     },
