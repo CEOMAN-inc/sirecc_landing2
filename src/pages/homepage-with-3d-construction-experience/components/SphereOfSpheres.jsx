@@ -1,122 +1,114 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Instances, Instance } from '@react-three/drei';
 import * as THREE from 'three';
 
-// --- Paleta de colores ---
-const brandColors = [
-  '#ff6600ff', // Naranja
-  '#00d4ff', // Cian
-  '#ee0000ff', // Rojo
-  '#34ff53', // Verde
-].map((color) => new THREE.Color(color));
+// --- VERSIÓN CON ESFERA MÁS PEQUEÑA ---
 
-const colorOrange = new THREE.Color('#ffffffff');
-const colorCyan = new THREE.Color('#00d4ff');
+const createCircleTexture = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const context = canvas.getContext('2d');
+  context.beginPath();
+  context.arc(32, 32, 30, 0, 2 * Math.PI);
+  context.fillStyle = 'white';
+  context.fill();
+  return new THREE.CanvasTexture(canvas);
+};
 
-// Este es el componente principal y único que necesitas.
-export default function SphereOfSpheres({ isButtonHovered = false }) {
-  const groupRef = useRef();
-  const instancesRef = useRef();
-  const particleCount = 500;
-  const compactRadius = 5;
-  const expandedRadius = 16;
+export default function SphereOfSpheres() {
+  const pointsRef = useRef();
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const particleCount = 1000;
+  const sphereRadius = 4; // ✅ AQUÍ SE REDUJO EL TAMAÑO DE LA ESFERA
 
-  const dummy = useMemo(() => new THREE.Object3D(), []);
+  // Paleta de colores
+  const colorOrange = new THREE.Color('#f27e33');
+  const colorCyan = new THREE.Color('#00d4ff');
+  const brandColors = [
+    new THREE.Color('#f27e33'), new THREE.Color('#00d4ff'),
+    new THREE.Color('#ef4444'), new THREE.Color('#10b981'),
+  ];
+  
+  const tempColor = new THREE.Color();
 
+  // Atributos de cada partícula
   const particles = useMemo(() => {
     const temp = [];
-    const phi = Math.PI * (3 - Math.sqrt(5));
     for (let i = 0; i < particleCount; i++) {
-      const y = 1 - (i / (particleCount - 1)) * 2;
-      const r = Math.sqrt(1 - y * y);
-      const theta = phi * i;
-      const x = Math.cos(theta) * r;
-      const z = Math.sin(theta) * r;
+      const phi = Math.acos(-1 + (2 * i) / particleCount);
+      const theta = Math.sqrt(particleCount * Math.PI) * phi;
       
-      const originalPosition = new THREE.Vector3(x, y, z).multiplyScalar(compactRadius);
-      const expandedPosition = new THREE.Vector3().randomDirection().multiplyScalar(compactRadius + Math.random() * (expandedRadius - compactRadius));
-
+      const initialPosition = new THREE.Vector3().setFromSphericalCoords(sphereRadius, phi, theta);
+      // La explosión ahora es proporcional al nuevo tamaño
+      const explosionPosition = initialPosition.clone().normalize().multiplyScalar(sphereRadius * 4.0);
+      
       temp.push({
-        originalPosition,
-        expandedPosition,
-        currentPosition: originalPosition.clone(),
-        randomColor: brandColors[Math.floor(Math.random() * brandColors.length)],
-        randomScale: 0.3 + Math.random() * 0.6,
-        color: new THREE.Color(), 
+        initialPosition,
+        explosionPosition,
+        currentPosition: initialPosition.clone(),
+        randomFactor: Math.random(),
+        explosionColor: brandColors[i % 4],
       });
     }
     return temp;
-  }, [particleCount, compactRadius, expandedRadius]);
+  }, [particleCount, sphereRadius]);
+
+  const positions = useMemo(() => new Float32Array(particleCount * 3), [particleCount]);
+  const colors = useMemo(() => new Float32Array(particleCount * 3), [particleCount]);
+  const circleTexture = useMemo(() => createCircleTexture(), []);
 
   useFrame((state) => {
-    if (!instancesRef.current) return;
+    if (!pointsRef.current) return;
+    const t = state.clock.getElapsedTime();
 
-    const { clock, mouse } = state;
-    const t = clock.getElapsedTime();
+    for (let i = 0; i < particleCount; i++) {
+      const p = particles[i];
 
-    groupRef.current.rotation.y = t * 0.05;
-
-    const mouseDistance = Math.sqrt(mouse.x ** 2 + mouse.y ** 2);
-    const dispersionFromMouse = THREE.MathUtils.smoothstep(1.0 - mouseDistance, 0.5, 1.0);
-    
-    const dispersionFactor = THREE.MathUtils.lerp(
-      dispersionFromMouse, 
-      isButtonHovered ? 1.0 : dispersionFromMouse, 
-      0.1
-    );
-
-    particles.forEach((particle, i) => {
-      const { originalPosition, expandedPosition, currentPosition, randomColor, randomScale, color } = particle;
-
-      let targetColor;
-      let targetScale = 0.2;
-      let targetPosition;
-
-      if (dispersionFactor > 0.1) {
-        // Estado de Explosión
-        targetColor = randomColor;
-        targetScale = randomScale;
-        targetPosition = expandedPosition;
-      } else {
-        // Estado Compacto con Pálpito
-        const palpitationFactor = (Math.sin(t * 2 + i * 0.2) + 1) / 2;
-        targetColor = new THREE.Color().lerpColors(colorOrange, colorCyan, palpitationFactor);
-        const pulse = Math.sin(t * 2) * 0.05 + 1;
-        targetPosition = originalPosition.clone().multiplyScalar(pulse);
-      }
-
-      currentPosition.lerp(targetPosition, 0.05);
-      color.lerp(targetColor, 0.07);
-      dummy.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.05);
+      // Pálpito de color en estado normal
+      const palpitationFactor = (Math.sin(t + p.randomFactor * 10) + 1) / 2;
+      const pulseColor = tempColor.clone().lerpColors(colorOrange, colorCyan, palpitationFactor);
       
-      dummy.position.copy(currentPosition);
-      dummy.updateMatrix();
-      
-      instancesRef.current.setMatrixAt(i, dummy.matrix);
-      instancesRef.current.setColorAt(i, color);
-    });
+      // Mezclamos el color del pálpito con el color de explosión según el hover
+      const finalColor = pulseColor.lerp(p.explosionColor, isHovered ? 1 : 0);
+      colors.set([finalColor.r, finalColor.g, finalColor.b], i * 3);
 
-    instancesRef.current.instanceMatrix.needsUpdate = true;
-    if (instancesRef.current.instanceColor) {
-      instancesRef.current.instanceColor.needsUpdate = true;
+      // Pálpito de posición en estado normal
+      const pulseRadius = sphereRadius + Math.sin(t * 2 + p.randomFactor * 10) * 0.5;
+      const normalPosition = p.initialPosition.clone().normalize().multiplyScalar(pulseRadius);
+
+      // Interpolamos suavemente a la posición de explosión solo si está en hover
+      p.currentPosition.lerp(isHovered ? p.explosionPosition : normalPosition, 0.04);
+      
+      positions.set([p.currentPosition.x, p.currentPosition.y, p.currentPosition.z], i * 3);
     }
+    
+    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    pointsRef.current.geometry.attributes.color.needsUpdate = true;
   });
 
   return (
-    <group ref={groupRef} position={[6, 0, 0]}>
-      <Instances ref={instancesRef} limit={particles.length}>
-        <sphereGeometry args={[1, 32, 32]} />
-        {/* Material simplificado para mostrar los colores puros */}
-        <meshStandardMaterial
-          roughness={0.2}
-          metalness={0.8}
-          vertexColors={true} // ¡Importante para que cada esfera tenga su color!
-        />
-        {particles.map((data, i) => (
-          <Instance key={i} />
-        ))}
-      </Instances>
-    </group>
+    <points 
+      ref={pointsRef} 
+      position={[6, 0, 0]}
+      // Eventos para detectar cuándo el mouse está sobre la esfera
+      onPointerOver={() => setIsHovered(true)}
+      onPointerOut={() => setIsHovered(false)}
+    >
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={particleCount} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-color" count={particleCount} array={colors} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.25} // ✅ AQUÍ SE AJUSTÓ EL TAMAÑO DE LAS PARTÍCULAS
+        vertexColors
+        sizeAttenuation
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+        map={circleTexture}
+        transparent={true}
+      />
+    </points>
   );
 }

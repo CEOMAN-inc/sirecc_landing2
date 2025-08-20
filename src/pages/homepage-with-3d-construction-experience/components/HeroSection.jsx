@@ -14,9 +14,10 @@ gsap.registerPlugin(ScrollTrigger);
 const HeroSection = () => {
   const heroRef = useRef(null);
   const contentRef = useRef(null);
-  // Estado para detectar si el mouse está sobre los botones
   const [isButtonHovered, setIsButtonHovered] = useState(false);
-
+  // ✅ NUEVO: Estado para activar la explosión al hacer clic
+  const [clickExplosion, setClickExplosion] = useState(0);
+  
   // Código para las animaciones de texto (sin cambios)
   useEffect(() => {
     if (!heroRef.current || !contentRef.current) return;
@@ -38,54 +39,24 @@ const HeroSection = () => {
     }, heroRef);
     return () => ctx.revert();
   }, []);
+  
+  const handleButtonClick = (url) => {
+    setClickExplosion(c => c + 1); // Activa la explosión
+    setTimeout(() => {
+        window.location.href = url;
+    }, 800); // Espera a que la animación comience antes de navegar
+  };
 
   return (
     <section ref={heroRef} className="relative h-screen overflow-hidden bg-background">
-      {/* Canvas 3D */}
       <div className="absolute inset-0 z-0">
         <Suspense fallback={null}>
-          <Canvas 
-            camera={{ position: [0, 0, 15], fov: 50 }}
-            gl={{ antialias: true, alpha: true }}
-          >
-            {/* ✅ CAMBIO: Configuración de luces mejorada */}
-            <ambientLight intensity={0.4} color="#eeff02ff" />
-            <directionalLight 
-              position={[10, 10, 5]} 
-              intensity={1.5} 
-              color="#ebe6e3ff"
-              castShadow={false}
-            />
-            <pointLight 
-              position={[10, 10, 10]} 
-              color="#df6c20ff" 
-              intensity={2}
-              distance={50}
-              decay={1}
-            />
-            <pointLight 
-              position={[-10, -10, 5]} 
-              color="#13badbff" 
-              intensity={2}
-              distance={50}
-              decay={1}
-            />
-            {/* Luz adicional para evitar zonas oscuras */}
-            <pointLight 
-              position={[0, 20, 10]} 
-              color="#ffffff" 
-              intensity={1}
-              distance={100}
-              decay={2}
-            />
-            
-            {/* Pasamos el estado como prop al componente de la esfera */}
-            <SphereOfSpheres isButtonHovered={isButtonHovered} />
+          <Canvas camera={{ position: [0, 0, 15], fov: 50 }}>
+            {/* ✅ NUEVO: Pasamos el nuevo prop a la esfera */}
+            <SphereOfSpheres isButtonHovered={isButtonHovered} clickExplosion={clickExplosion} />
           </Canvas>
         </Suspense>
       </div>
-
-      {/* Contenido HTML superpuesto */}
       <div className="relative z-10 h-full flex pt-40 md:pt-48 pointer-events-none">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full">
           <div ref={contentRef} className="max-w-4xl">
@@ -95,20 +66,18 @@ const HeroSection = () => {
               transition={{ duration: 1, delay: 1 }}
               className="space-y-10"
             >
-              {/* Main Headline */}
               <div className="space-y-6">
                 <div className="hero-title">
                   <h1 className="font-orbitron font-black text-6xl lg:text-6xl text-foreground leading-none tracking-tight">
                     <span className="block">Construimos con propósito</span>
                     <span className="block text-transparent bg-gradient-to-r from-secondary via-accent to-secondary bg-clip-text animate-pulse">
-                      transformamos con calidad
+                        Transformamos con <br /> Calidad
                     </span>
                     <span className="block text-lg font-inter font-normal text-accent mt-2 tracking-wide">
                       CON TECNOLOGÍA 3D AVANZADA
                     </span>
                   </h1>
                 </div>
-                
                 <motion.p
                   className="hero-subtitle font-inter text-2xl lg:text-3xl text-muted-foreground max-w-3xl leading-relaxed"
                   whileHover={{ scale: 1.02 }}
@@ -118,8 +87,6 @@ const HeroSection = () => {
                   tecnología de vanguardia y más de 15 años de experiencia en construcción de alto impacto.
                 </motion.p>
               </div>
-
-              {/* Enhanced CTA Buttons */}
               <motion.div
                 className="hero-buttons flex flex-col sm:flex-row gap-6"
                 whileHover={{ scale: 1.01 }}
@@ -131,13 +98,12 @@ const HeroSection = () => {
                   iconName="MessageSquare"
                   iconPosition="left"
                   className="bg-gradient-to-r from-secondary to-accent hover:from-secondary/90 hover:to-accent/90 glow-effect transform hover:scale-105 transition-all duration-500 text-xl py-6 px-8"
-                  onClick={() => window.location.href = '/contact-quote-request'}
+                  onClick={() => handleButtonClick('/contact-quote-request')}
                   onMouseEnter={() => setIsButtonHovered(true)}
                   onMouseLeave={() => setIsButtonHovered(false)}
                 >
                   Solicitar Cotización 3D
                 </Button>
-                
                 <Button
                   style={{ pointerEvents: 'auto' }}
                   variant="outline"
@@ -145,49 +111,32 @@ const HeroSection = () => {
                   iconName="ArrowRight"
                   iconPosition="right"
                   className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-white transition-all duration-500 text-xl py-6 px-8 backdrop-blur-sm bg-white/5"
-                  onClick={() => window.location.href = '/services-portfolio-showcase'}
+                  onClick={() => handleButtonClick('/services-portfolio-showcase')}
                   onMouseEnter={() => setIsButtonHovered(true)}
                   onMouseLeave={() => setIsButtonHovered(false)}
                 >
                   Explorar Proyectos
                 </Button>
               </motion.div>
-
-              {/* Enhanced Trust Indicators */}
               <motion.div
                 className="hero-trust flex flex-wrap items-center gap-8 pt-8"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 1.5 }}
               >
-                <motion.div
-                  className="trust-indicator flex items-center space-x-3 text-muted-foreground group"
-                  whileHover={{ scale: 1.1, color: "#10b981" }}
-                >
+                <motion.div className="trust-indicator flex items-center space-x-3 text-muted-foreground group" whileHover={{ scale: 1.1, color: "#10b981" }}>
                   <Icon name="Shield" size={24} className="text-success group-hover:animate-pulse" />
                   <span className="font-inter text-sm font-medium">Certificación ISO 9001</span>
                 </motion.div>
-                
-                <motion.div
-                  className="trust-indicator flex items-center space-x-3 text-muted-foreground group"
-                  whileHover={{ scale: 1.1, color: "#00d4ff" }}
-                >
+                <motion.div className="trust-indicator flex items-center space-x-3 text-muted-foreground group" whileHover={{ scale: 1.1, color: "#00d4ff" }}>
                   <Icon name="Award" size={24} className="text-accent group-hover:animate-bounce" />
                   <span className="font-inter text-sm font-medium">15+ Años Experiencia</span>
                 </motion.div>
-                
-                <motion.div
-                  className="trust-indicator flex items-center space-x-3 text-muted-foreground group"
-                  whileHover={{ scale: 1.1, color: "#f27e33" }}
-                >
+                <motion.div className="trust-indicator flex items-center space-x-3 text-muted-foreground group" whileHover={{ scale: 1.1, color: "#f27e33" }}>
                   <Icon name="Users" size={24} className="text-secondary group-hover:animate-spin" />
                   <span className="font-inter text-sm font-medium">250+ Proyectos Completados</span>
                 </motion.div>
-
-                <motion.div
-                  className="trust-indicator flex items-center space-x-3 text-muted-foreground group"
-                  whileHover={{ scale: 1.1, color: "#f27e33" }}
-                >
+                <motion.div className="trust-indicator flex items-center space-x-3 text-muted-foreground group" whileHover={{ scale: 1.1, color: "#f27e33" }}>
                   <Icon name="Zap" size={24} className="text-accent group-hover:animate-pulse" />
                   <span className="font-inter text-sm font-medium">Tecnología 3D Avanzada</span>
                 </motion.div>

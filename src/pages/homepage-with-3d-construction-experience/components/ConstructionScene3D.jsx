@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, Suspense } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber'; // CORREGIDO
 import { OrbitControls, Environment, Text3D, Center, Float } from '@react-three/drei';
 
 import { gsap } from 'gsap';
