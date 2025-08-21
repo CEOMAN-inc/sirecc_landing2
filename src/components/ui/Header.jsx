@@ -3,6 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
 
+const ORANGE = '#F27E33';
+const NAVY   = '#1D2946';
+
 const Header = ({ transparent = false }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -16,10 +19,7 @@ const Header = ({ transparent = false }) => {
   ];
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -28,18 +28,26 @@ const Header = ({ transparent = false }) => {
 
   const headerClasses = `
     fixed top-0 left-0 right-0 z-100 transition-all duration-300 ease-construction
-    ${transparent && !isScrolled 
-      ? 'bg-transparent backdrop-blur-none' :'bg-background/95 backdrop-blur-sm construction-shadow'
+    ${
+      transparent && !isScrolled
+        ? 'bg-transparent backdrop-blur-none'
+        : 'bg-background/95 backdrop-blur-sm construction-shadow'
     }
   `;
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
+  // ⇩⇩⇩ NUEVO: CTA del header sincroniza explosión de la esfera y navega
+  const handleHeaderQuoteClick = () => {
+    // avisa al Hero para que haga la explosión
+    window.dispatchEvent(new CustomEvent('hero-explode'));
+    // pequeña demora para que se vea la microinteracción si ya estás en el hero
+    setTimeout(() => {
+      window.location.href = '/contact-quote-request';
+    }, 450);
   };
+  // ⇧⇧⇧
 
   return (
     <>
@@ -47,21 +55,11 @@ const Header = ({ transparent = false }) => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link 
-              to="/homepage-with-3d-construction-experience" 
+            <Link
+              to="/homepage-with-3d-construction-experience"
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-secondary to-accent rounded-lg flex items-center justify-center">
-                <Icon name="Building2" size={24} color="#ffffff" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-orbitron font-bold text-lg text-foreground leading-tight">
-                  SIRECC
-                </span>
-                <span className="font-inter text-xs text-muted-foreground leading-tight">
-                  Construction
-                </span>
-              </div>
+              <img src="/assets/images/sirecc-logo.png" alt="SIRECC Logo" className="w-120 h-10" />
             </Link>
 
             {/* Desktop Navigation */}
@@ -74,8 +72,10 @@ const Header = ({ transparent = false }) => {
                     relative px-4 py-2 rounded-lg font-inter font-medium text-sm
                     transition-all duration-200 ease-construction
                     hover:scale-105 hover:bg-muted/50
-                    ${isActive(item?.path)
-                      ? 'text-secondary bg-secondary/10 border border-secondary/20' :'text-foreground hover:text-secondary'
+                    ${
+                      isActive(item?.path)
+                        ? 'text-secondary bg-secondary/10 border border-secondary/20'
+                        : 'text-foreground hover:text-secondary'
                     }
                   `}
                 >
@@ -84,21 +84,28 @@ const Header = ({ transparent = false }) => {
                     <span>{item?.label}</span>
                   </span>
                   {isActive(item?.path) && (
-                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-secondary rounded-full" />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-secondary rounded-full" />
                   )}
                 </Link>
               ))}
             </nav>
 
-            {/* CTA Button - Desktop */}
-            <div className="hidden md:block">
+            {/* CTA Button - Desktop (REEMPLAZADO con halo ORANGE/NAVY) */}
+            <div className="hidden md:block relative group">
+              {/* halo detrás */}
+              <span
+                className="absolute -inset-[2px] rounded-xl opacity-70 group-hover:opacity-100 blur transition duration-500"
+                style={{ background: `linear-gradient(90deg, ${ORANGE}, ${NAVY})` }}
+                aria-hidden
+              />
               <Button
                 variant="default"
                 size="sm"
                 iconName="MessageSquare"
                 iconPosition="left"
-                className="bg-gradient-to-r from-secondary to-accent hover:from-secondary/90 hover:to-accent/90 glow-effect"
-                onClick={() => window.location.href = '/contact-quote-request'}
+                onClick={handleHeaderQuoteClick}
+                className="relative rounded-xl bg-white/10 backdrop-blur-sm text-white border border-white/10
+                           hover:scale-[1.02] transition-all duration-300"
               >
                 Cotizar Proyecto
               </Button>
@@ -110,15 +117,12 @@ const Header = ({ transparent = false }) => {
               className="md:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors duration-200"
               aria-label="Toggle mobile menu"
             >
-              <Icon 
-                name={isMobileMenuOpen ? "X" : "Menu"} 
-                size={24} 
-                color="currentColor" 
-              />
+              <Icon name={isMobileMenuOpen ? 'X' : 'Menu'} size={24} color="currentColor" />
             </button>
           </div>
         </div>
       </header>
+
       {/* Mobile Navigation Drawer */}
       <div
         className={`
@@ -127,11 +131,8 @@ const Header = ({ transparent = false }) => {
         `}
       >
         {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-background/80 backdrop-blur-sm"
-          onClick={closeMobileMenu}
-        />
-        
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={closeMobileMenu} />
+
         {/* Drawer */}
         <div
           className={`
@@ -144,12 +145,8 @@ const Header = ({ transparent = false }) => {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-secondary to-accent rounded-lg flex items-center justify-center">
-                  <Icon name="Building2" size={20} color="#ffffff" />
-                </div>
-                <span className="font-orbitron font-bold text-lg text-foreground">
-                  SIRECC
-                </span>
+                <img src="/assets/images/sirecc-logo.png" alt="SIRECC Logo" className="w-8 h-8" />
+                <span className="font-orbitron font-bold text-lg text-foreground">SIRECC</span>
               </div>
               <button
                 onClick={closeMobileMenu}
@@ -172,37 +169,45 @@ const Header = ({ transparent = false }) => {
                       flex items-center space-x-4 px-4 py-3 rounded-lg
                       font-inter font-medium text-base transition-all duration-200
                       hover:bg-muted/50 hover:scale-105
-                      ${isActive(item?.path)
-                        ? 'text-secondary bg-secondary/10 border border-secondary/20' :'text-foreground hover:text-secondary'
+                      ${
+                        isActive(item?.path)
+                          ? 'text-secondary bg-secondary/10 border border-secondary/20'
+                          : 'text-foreground hover:text-secondary'
                       }
                     `}
                   >
                     <Icon name={item?.icon} size={20} />
                     <span>{item?.label}</span>
-                    {isActive(item?.path) && (
-                      <div className="ml-auto w-2 h-2 bg-secondary rounded-full" />
-                    )}
+                    {isActive(item?.path) && <div className="ml-auto w-2 h-2 bg-secondary rounded-full" />}
                   </Link>
                 ))}
               </div>
             </nav>
 
-            {/* CTA Button - Mobile */}
+            {/* CTA Button - Mobile (REEMPLAZADO con halo ORANGE/NAVY) */}
             <div className="p-6 border-t border-border">
-              <Button
-                variant="default"
-                size="default"
-                iconName="MessageSquare"
-                iconPosition="left"
-                fullWidth
-                className="bg-gradient-to-r from-secondary to-accent hover:from-secondary/90 hover:to-accent/90 glow-effect"
-                onClick={() => {
-                  closeMobileMenu();
-                  window.location.href = '/contact-quote-request';
-                }}
-              >
-                Cotizar Proyecto
-              </Button>
+              <div className="relative group">
+                <span
+                  className="absolute -inset-[2px] rounded-xl opacity-70 group-hover:opacity-100 blur transition duration-500"
+                  style={{ background: `linear-gradient(90deg, ${NAVY}, ${ORANGE})` }}
+                  aria-hidden
+                />
+                <Button
+                  variant="default"
+                  size="default"
+                  iconName="MessageSquare"
+                  iconPosition="left"
+                  fullWidth
+                  onClick={() => {
+                    closeMobileMenu();
+                    handleHeaderQuoteClick();
+                  }}
+                  className="relative rounded-xl bg-white/10 backdrop-blur-sm text-white border border-white/10
+                             hover:scale-[1.01] transition-all duration-300"
+                >
+                  Cotizar Proyecto
+                </Button>
+              </div>
             </div>
           </div>
         </div>

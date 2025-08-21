@@ -1,114 +1,166 @@
-import React, { useRef, useMemo, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React, { useMemo, useRef, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// --- VERSIÓN CON ESFERA MÁS PEQUEÑA ---
-
-const createCircleTexture = () => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
-  const context = canvas.getContext('2d');
-  context.beginPath();
-  context.arc(32, 32, 30, 0, 2 * Math.PI);
-  context.fillStyle = 'white';
-  context.fill();
-  return new THREE.CanvasTexture(canvas);
-};
-
-export default function SphereOfSpheres() {
+export default function SphereOfSpheres({
+  count = 1400,
+  radius = 5.2,
+  pulseAmp = 0.35,      // amplitud del “palpito”
+  pulseSpeed = 1.2,     // velocidad del “palpito”
+  autoRotate = 0.15,    // giro base
+  mouseIntensity = 0.7, // cuánto afecta el mouse al giro
+  position = [6, 0, 0],
+}) {
+  const groupRef = useRef();
   const pointsRef = useRef();
-  const [isHovered, setIsHovered] = useState(false);
-  
-  const particleCount = 1000;
-  const sphereRadius = 4; // ✅ AQUÍ SE REDUJO EL TAMAÑO DE LA ESFERA
+  const colliderRef = useRef();
+  const { pointer, clock } = useThree();
 
-  // Paleta de colores
-  const colorOrange = new THREE.Color('#f27e33');
-  const colorCyan = new THREE.Color('#00d4ff');
-  const brandColors = [
-    new THREE.Color('#f27e33'), new THREE.Color('#00d4ff'),
-    new THREE.Color('#ef4444'), new THREE.Color('#10b981'),
-  ];
-  
-  const tempColor = new THREE.Color();
+  // ---- Colores ----
+  const baseInner = useMemo(() => new THREE.Color('#1D2946'), []); // gris al contraer
+  const baseOuter = useMemo(() => new THREE.Color('#F27E33'), []); // azul al expandir
+  const explodePalette = useMemo(
+    () => ['#f27e33', '#00d4ff', '#fb923c', '#3cc9c6', '#f472b6'].map(c => new THREE.Color(c)),
+    []
+  );
+  const tempColor = useMemo(() => new THREE.Color(), []);
 
-  // Atributos de cada partícula
-  const particles = useMemo(() => {
-    const temp = [];
-    for (let i = 0; i < particleCount; i++) {
-      const phi = Math.acos(-1 + (2 * i) / particleCount);
-      const theta = Math.sqrt(particleCount * Math.PI) * phi;
-      
-      const initialPosition = new THREE.Vector3().setFromSphericalCoords(sphereRadius, phi, theta);
-      // La explosión ahora es proporcional al nuevo tamaño
-      const explosionPosition = initialPosition.clone().normalize().multiplyScalar(sphereRadius * 4.0);
-      
-      temp.push({
-        initialPosition,
-        explosionPosition,
-        currentPosition: initialPosition.clone(),
-        randomFactor: Math.random(),
-        explosionColor: brandColors[i % 4],
-      });
+  // ---- Direcciones unitarias sobre esfera (Fibonacci sphere) ----
+  const dirs = useMemo(() => {
+    const arr = new Array(count);
+    const ga = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < count; i++) {
+      const y = 1 - (i / (count - 1)) * 2; // [-1, 1]
+      const r = Math.sqrt(1 - y * y);
+      const theta = ga * i;
+      arr[i] = new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r);
     }
-    return temp;
-  }, [particleCount, sphereRadius]);
+    return arr;
+  }, [count]);
 
-  const positions = useMemo(() => new Float32Array(particleCount * 3), [particleCount]);
-  const colors = useMemo(() => new Float32Array(particleCount * 3), [particleCount]);
-  const circleTexture = useMemo(() => createCircleTexture(), []);
-
-  useFrame((state) => {
-    if (!pointsRef.current) return;
-    const t = state.clock.getElapsedTime();
-
-    for (let i = 0; i < particleCount; i++) {
-      const p = particles[i];
-
-      // Pálpito de color en estado normal
-      const palpitationFactor = (Math.sin(t + p.randomFactor * 10) + 1) / 2;
-      const pulseColor = tempColor.clone().lerpColors(colorOrange, colorCyan, palpitationFactor);
-      
-      // Mezclamos el color del pálpito con el color de explosión según el hover
-      const finalColor = pulseColor.lerp(p.explosionColor, isHovered ? 1 : 0);
-      colors.set([finalColor.r, finalColor.g, finalColor.b], i * 3);
-
-      // Pálpito de posición en estado normal
-      const pulseRadius = sphereRadius + Math.sin(t * 2 + p.randomFactor * 10) * 0.5;
-      const normalPosition = p.initialPosition.clone().normalize().multiplyScalar(pulseRadius);
-
-      // Interpolamos suavemente a la posición de explosión solo si está en hover
-      p.currentPosition.lerp(isHovered ? p.explosionPosition : normalPosition, 0.04);
-      
-      positions.set([p.currentPosition.x, p.currentPosition.y, p.currentPosition.z], i * 3);
+  // Colores de explosión preasignados por partícula (para variedad)
+  const explodeColors = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const c = explodePalette[i % explodePalette.length];
+      arr[i * 3 + 0] = c.r;
+      arr[i * 3 + 1] = c.g;
+      arr[i * 3 + 2] = c.b;
     }
-    
-    pointsRef.current.geometry.attributes.position.needsUpdate = true;
-    pointsRef.current.geometry.attributes.color.needsUpdate = true;
+    return arr;
+  }, [count, explodePalette]);
+
+  // Buffers
+  const positions = useMemo(() => new Float32Array(count * 3), [count]);
+  const colors    = useMemo(() => new Float32Array(count * 3), [count]);
+
+  // Textura disco para puntos redondos
+  const disk = useMemo(() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.beginPath(); ctx.arc(32, 32, 30, 0, Math.PI * 2); ctx.fillStyle = 'white'; ctx.fill();
+    return new THREE.CanvasTexture(c);
+  }, []);
+
+  // Estado de hover (dispara la explosión de colores y radio)
+  const [hovered, setHovered] = useState(false);
+  const explode = useRef(0); // 0 → normal, 1 → explotar
+
+  // Capturador “invisible” de puntero (un poco más grande que la esfera)
+  // para que cualquier toque dispare hover de forma fiable.
+  const colliderRadius = radius * 1.15;
+
+  useFrame((state, delta) => {
+    if (!groupRef.current || !pointsRef.current) return;
+
+    const t = clock.getElapsedTime();
+
+    // --- giro con mouse + autorrotación ---
+    const targetX = pointer.y * mouseIntensity;
+    const targetY = pointer.x * mouseIntensity + t * autoRotate;
+    groupRef.current.rotation.x += (targetX - groupRef.current.rotation.x) * 0.08;
+    groupRef.current.rotation.y += (targetY - groupRef.current.rotation.y) * 0.08;
+
+    // --- factor de explosión (easing) ---
+    const targetExplode = hovered ? 1 : 0;
+    explode.current += (targetExplode - explode.current) * 0.08; // suaviza
+
+    // --- palpito global (color + radio) en modo normal ---
+    const pf = (Math.sin(t * pulseSpeed) + 1) / 2; // 0..1 (mismo para todas las partículas)
+    // color base: gris (adentro) ↔ azul (afuera)
+    const base = tempColor.lerpColors(baseInner, baseOuter, pf);
+    const br = base.r, bg = base.g, bb = base.b;
+
+    // radio “respirando”
+    let rr = radius + (pf - 0.5) * 2 * pulseAmp;
+    // si está explotando, interpolamos hacia un radio mayor
+    const explodeRadius = radius * 4.0;
+    rr = THREE.MathUtils.lerp(rr, explodeRadius, explode.current);
+
+    const pos = positions;
+    const col = colors;
+
+    for (let i = 0; i < count; i++) {
+      const v = dirs[i];
+      const k = i * 3;
+
+      // posición radial (mantiene forma esférica)
+      pos[k + 0] = v.x * rr;
+      pos[k + 1] = v.y * rr;
+      pos[k + 2] = v.z * rr;
+
+      // color:
+      if (explode.current > 0) {
+        // mezcla del color base hacia el color asignado de explosión
+        const er = explodeColors[k + 0];
+        const eg = explodeColors[k + 1];
+        const eb = explodeColors[k + 2];
+        col[k + 0] = br + (er - br) * explode.current;
+        col[k + 1] = bg + (eg - bg) * explode.current;
+        col[k + 2] = bb + (eb - bb) * explode.current;
+      } else {
+        // modo normal: uniforme gris↔azul según el palpito
+        col[k + 0] = br;
+        col[k + 1] = bg;
+        col[k + 2] = bb;
+      }
+    }
+
+    const geo = pointsRef.current.geometry;
+    geo.attributes.position.needsUpdate = true;
+    geo.attributes.color.needsUpdate = true;
   });
 
   return (
-    <points 
-      ref={pointsRef} 
-      position={[6, 0, 0]}
-      // Eventos para detectar cuándo el mouse está sobre la esfera
-      onPointerOver={() => setIsHovered(true)}
-      onPointerOut={() => setIsHovered(false)}
-    >
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={particleCount} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={particleCount} array={colors} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.25} // ✅ AQUÍ SE AJUSTÓ EL TAMAÑO DE LAS PARTÍCULAS
-        vertexColors
-        sizeAttenuation
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-        map={circleTexture}
-        transparent={true}
-      />
-    </points>
+    <group ref={groupRef} position={position}>
+      {/* Capturador invisible para hover (no uses visible=false; no raycastea) */}
+      <mesh
+        ref={colliderRef}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        <sphereGeometry args={[colliderRadius, 16, 16]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
+      </mesh>
+
+      {/* Nube de puntos esférica */}
+      <points ref={pointsRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" array={positions} count={count} itemSize={3} />
+          <bufferAttribute attach="attributes-color"    array={colors}    count={count} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial
+  size={0.24}              // ↓ tamaño del punto
+  vertexColors
+  sizeAttenuation
+  depthWrite={false}
+  transparent
+  opacity={0.78}           // ← integra con el fondo
+  blending={THREE.AdditiveBlending}
+  map={disk}
+/>
+      </points>
+    </group>
   );
 }
