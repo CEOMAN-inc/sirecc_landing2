@@ -37,28 +37,35 @@ export default function GlobalSphereLayer() {
     };
   }, []);
 
-  // Parallax vertical para que acompañe todo el scroll
-  useEffect(() => {
-    const st = ScrollTrigger.create({
-      start: 0,
-      end: () => document.body.scrollHeight - window.innerHeight,
-      scrub: true,
-      onUpdate: (self) => {
-        if (!groupRef.current) return;
-        const y = gsap.utils.mapRange(0, 1, 1.6, -1.6, self.progress);
-        gsap.to(groupRef.current.position, { y, duration: 0.25, ease: 'power1.out', overwrite: true });
-        gsap.to(groupRef.current.rotation, { y: self.progress * Math.PI * 2, duration: 0.6, ease: 'none', overwrite: true });
-      },
-    });
-    return () => st.kill();
-  }, []);
+useEffect(() => {
+  const st = ScrollTrigger.create({
+    start: 0,
+    end: () => document.body.scrollHeight - window.innerHeight,
+    scrub: true,
+    onUpdate: (self) => {
+      if (!groupRef.current) return;
+
+      // Progreso de scroll (0 = inicio, 1 = final)
+      // Mapea a un rango mayor para que se note el efecto
+      const y = gsap.utils.mapRange(0, 1, 4, -4, self.progress);
+
+      gsap.to(groupRef.current.position, {
+        y,
+        duration: 0.3,
+        ease: 'power1.out',
+        overwrite: true,
+      });
+    },
+  });
+
+  return () => st.kill();
+}, []);
 
   // Zona visible de la esfera (radial, lado derecho)
-  const MASK_CX = '84%';
-  const MASK_CY = '45%';
-  const MASK_INNER = '52%';
-  const MASK_OUTER = '92%';
-
+const MASK_CX = '50%';   // centro en el medio
+const MASK_CY = '50%';
+const MASK_INNER = '100%'; // todo visible
+const MASK_OUTER = '150%'; // difuminado hacia afuera
   return (
     // z-[5]: encima de fondos/overlays del Hero, debajo del texto (que irá en z-[20])
     <div className="fixed inset-0 z-[5] pointer-events-none">
@@ -73,8 +80,8 @@ export default function GlobalSphereLayer() {
           <fog attach="fog" args={[BASE_BG, 8, 38]} />
           <group ref={groupRef} position={[12, 0.5, 1]}>
             <SphereOfSpheres
-              count={2000}
-              radius={7}
+              count={1000}
+              radius={6}
               pulseAmp={0.32}
               autoRotate={0.14}
               mouseIntensity={0.65}
@@ -96,19 +103,20 @@ export default function GlobalSphereLayer() {
       />
 
       {/* Máscara radial: visible en la derecha, se desvanece hacia afuera */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          WebkitMaskImage: `radial-gradient(circle at ${MASK_CX} ${MASK_CY},
-            rgba(0,0,0,1) ${MASK_INNER},
-            rgba(0,0,0,0) ${MASK_OUTER}
-          )`,
-          maskImage: `radial-gradient(circle at ${MASK_CX} ${MASK_CY},
-            rgba(0,0,0,1) ${MASK_INNER},
-            rgba(0,0,0,0) ${MASK_OUTER}
-          )`,
-        }}
-      />
+<div
+  className="absolute inset-0 pointer-events-none"
+  style={{
+    WebkitMaskImage: `radial-gradient(circle at ${MASK_CX} ${MASK_CY},
+      rgba(0,0,0,1) ${MASK_INNER},
+      rgba(0,0,0,0) ${MASK_OUTER}
+    )`,
+    maskImage: `radial-gradient(circle at ${MASK_CX} ${MASK_CY},
+      rgba(0,0,0,1) ${MASK_INNER},
+      rgba(0,0,0,0) ${MASK_OUTER}
+    )`,
+  }}
+/>
+
     </div>
   );
 }

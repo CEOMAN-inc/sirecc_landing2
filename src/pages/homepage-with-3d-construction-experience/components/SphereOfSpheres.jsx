@@ -4,7 +4,7 @@ import * as THREE from 'three';
 
 export default function SphereOfSpheres({
   count = 1600,
-  radius = 5.2,
+  radius = 4.0,
   pulseAmp = 0.35,      // amplitud del “palpito”
   pulseSpeed = 1.2,     // velocidad del “palpito”
   autoRotate = 0.15,    // giro base
@@ -12,8 +12,8 @@ export default function SphereOfSpheres({
   position = [6, 0, 0],
 
   // ★ NUEVOS CONTROLES DE EXPLOSIÓN
-  explodeFactor = 2.6,   // multiplica el radio durante la explosión (antes era 4.0)
-  explodeHardCap = 18.4, // tope absoluto (en world units) para que no se desborde
+  explodeFactor = 100.0,   // multiplica el radio durante la explosión (antes era 4.0)
+  explodeHardCap = 23.4, // tope absoluto (en world units) para que no se desborde
 }) {
   const groupRef = useRef();
   const pointsRef = useRef();
