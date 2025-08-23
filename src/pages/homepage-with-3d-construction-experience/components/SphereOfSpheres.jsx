@@ -3,13 +3,17 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 export default function SphereOfSpheres({
-  count = 1400,
+  count = 1600,
   radius = 5.2,
   pulseAmp = 0.35,      // amplitud del “palpito”
   pulseSpeed = 1.2,     // velocidad del “palpito”
   autoRotate = 0.15,    // giro base
   mouseIntensity = 0.7, // cuánto afecta el mouse al giro
   position = [6, 0, 0],
+
+  // ★ NUEVOS CONTROLES DE EXPLOSIÓN
+  explodeFactor = 2.6,   // multiplica el radio durante la explosión (antes era 4.0)
+  explodeHardCap = 18.4, // tope absoluto (en world units) para que no se desborde
 }) {
   const groupRef = useRef();
   const pointsRef = useRef();
@@ -67,11 +71,10 @@ export default function SphereOfSpheres({
   const [hovered, setHovered] = useState(false);
   const explode = useRef(0); // 0 → normal, 1 → explotar
 
-  // Capturador “invisible” de puntero (un poco más grande que la esfera)
-  // para que cualquier toque dispare hover de forma fiable.
+  // Capturador “invisible” de puntero
   const colliderRadius = radius * 1.15;
 
-  useFrame((state, delta) => {
+  useFrame(() => {
     if (!groupRef.current || !pointsRef.current) return;
 
     const t = clock.getElapsedTime();
@@ -84,18 +87,21 @@ export default function SphereOfSpheres({
 
     // --- factor de explosión (easing) ---
     const targetExplode = hovered ? 1 : 0;
-    explode.current += (targetExplode - explode.current) * 0.08; // suaviza
+    explode.current += (targetExplode - explode.current) * 0.08;
 
     // --- palpito global (color + radio) en modo normal ---
-    const pf = (Math.sin(t * pulseSpeed) + 1) / 2; // 0..1 (mismo para todas las partículas)
-    // color base: gris (adentro) ↔ azul (afuera)
+    const pf = (Math.sin(t * pulseSpeed) + 1) / 2; // 0..1
     const base = tempColor.lerpColors(baseInner, baseOuter, pf);
     const br = base.r, bg = base.g, bb = base.b;
 
     // radio “respirando”
     let rr = radius + (pf - 0.5) * 2 * pulseAmp;
-    // si está explotando, interpolamos hacia un radio mayor
-    const explodeRadius = radius * 4.0;
+
+    // ★ límite de explosión:
+    //    - primero fijamos un objetivo multiplicado por factor
+    //    - luego lo limitamos con un CAP absoluto para no invadir toda la pantalla
+    const explodeTarget = radius * explodeFactor;          // p.ej. 5.2 * 1.9 ≈ 9.88
+    const explodeRadius = Math.min(explodeTarget, explodeHardCap);
     rr = THREE.MathUtils.lerp(rr, explodeRadius, explode.current);
 
     const pos = positions;
@@ -105,14 +111,13 @@ export default function SphereOfSpheres({
       const v = dirs[i];
       const k = i * 3;
 
-      // posición radial (mantiene forma esférica)
+      // posición radial
       pos[k + 0] = v.x * rr;
       pos[k + 1] = v.y * rr;
       pos[k + 2] = v.z * rr;
 
-      // color:
+      // color
       if (explode.current > 0) {
-        // mezcla del color base hacia el color asignado de explosión
         const er = explodeColors[k + 0];
         const eg = explodeColors[k + 1];
         const eb = explodeColors[k + 2];
@@ -120,7 +125,6 @@ export default function SphereOfSpheres({
         col[k + 1] = bg + (eg - bg) * explode.current;
         col[k + 2] = bb + (eb - bb) * explode.current;
       } else {
-        // modo normal: uniforme gris↔azul según el palpito
         col[k + 0] = br;
         col[k + 1] = bg;
         col[k + 2] = bb;
@@ -134,7 +138,7 @@ export default function SphereOfSpheres({
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Capturador invisible para hover (no uses visible=false; no raycastea) */}
+      {/* Capturador invisible para hover */}
       <mesh
         ref={colliderRef}
         onPointerOver={() => setHovered(true)}
@@ -151,15 +155,15 @@ export default function SphereOfSpheres({
           <bufferAttribute attach="attributes-color"    array={colors}    count={count} itemSize={3} />
         </bufferGeometry>
         <pointsMaterial
-  size={0.24}              // ↓ tamaño del punto
-  vertexColors
-  sizeAttenuation
-  depthWrite={false}
-  transparent
-  opacity={0.78}           // ← integra con el fondo
-  blending={THREE.AdditiveBlending}
-  map={disk}
-/>
+          size={0.24}
+          vertexColors
+          sizeAttenuation
+          depthWrite={false}
+          transparent
+          opacity={0.78}
+          blending={THREE.AdditiveBlending}
+          map={disk}
+        />
       </points>
     </group>
   );
