@@ -4,7 +4,7 @@ import Cube3D from "./Cube3D";
 import useCubeRotation from "./useCubeRotation";
 
 
-const PORTFOLIO_PDF_URL = "/docs/Portafolio_SIRECC.pdf";
+const PORTFOLIO_PDF_URL = `${import.meta.env.BASE_URL}docs/Portafolio_SIRECC.pdf`;
 const SERVICES_OVERLAY = "/assets/images/fondo2.png";
 
 /* === Paleta igual al HeroSection === */
@@ -18,44 +18,44 @@ const RED = "#ff0000ff";
 /* === Imágenes demo (reemplaza por tus fotos) === */
 const IMG = {
   obra1: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=1600&auto=format&fit=crop",
-  obra2: "https://images.unsplash.com/photo-1504307650460-0402562f9c62?q=80&w=1600&auto=format&fit=crop",
-  obra3: "https://images.unsplash.com/photo-1465804575741-338df8554eeb?q=80&w=1600&auto=format&fit=crop",
+  obra2: "/services/obra1.png",
+  obra3: "/services/obra2.png",
 
-  acab1: "https://images.unsplash.com/photo-1598300183691-3be2f6c6b6fd?q=80&w=1600&auto=format&fit=crop",
-  acab2: "https://images.unsplash.com/photo-1582582621958-0ac64ce636e7?q=80&w=1600&auto=format&fit=crop",
-  acab3: "https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=1600&auto=format&fit=crop",
+  acab1: "/services/acabado1.png",
+  acab2: "/services/acabado2.png",
+  acab3: "/services/acabado3.png",
 
-  mant1: "https://images.unsplash.com/photo-1581093228389-16d1b7241c51?q=80&w=1600&auto=format&fit=crop",
-  mant2: "https://images.unsplash.com/photo-1576678927484-cc907957088c?q=80&w=1600&auto=format&fit=crop",
-  mant3: "https://images.unsplash.com/photo-1523419409543-324a77ca0f6b?q=80&w=1600&auto=format&fit=crop",
+  mant1: "/services/ml1.png",
+  mant2: "/services/ml2.png",
+  mant3: "/services/ml3.png",
 
-  com1: "https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1600&auto=format&fit=crop",
+  com1: "/services/comunicacion1.png",
   com2: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1600&auto=format&fit=crop",
-  com3: "https://images.unsplash.com/photo-1585314062604-1a357de8e19b?q=80&w=1600&auto=format&fit=crop",
+  com3: "/services/comunicacion2.png",
 
-  hidro1: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=1600&auto=format&fit=crop",
-  hidro2: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1600&auto=format&fit=crop",
-  hidro3: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=1600&auto=format&fit=crop",
+  hidro1: "/services/hidro1.png",
+  hidro2: "/services/hidro2.png",
+  hidro3: "/services/hidro3.png",
 
-  mob1: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1600&auto=format&fit=crop",
-  mob2: "https://images.unsplash.com/photo-1554995208-673a23048d34?q=80&w=1600&auto=format&fit=crop",
-  mob3: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600&auto=format&fit=crop",
+  mob1: "/services/mobiliario1.png",
+  mob2: "/services/mobiliario2.png",
+  mob3: "/services/mobiliario3.png",
 
-  elec1: "https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=1600&auto=format&fit=crop",
-  elec2: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=1600&auto=format&fit=crop",
+  elec1: "/services/electrico1.png",
+  elec2: "/services/electrico2.png",
   elec3: "https://images.unsplash.com/photo-1558002038-1055907df827?q=80&w=1600&auto=format&fit=crop",
 
-  pub1: "https://images.unsplash.com/photo-1520975922215-c0e11f0a3a76?q=80&w=1600&auto=format&fit=crop",
-  pub2: "https://images.unsplash.com/photo-1494797710133-75ad3835d2ae?q=80&w=1600&auto=format&fit=crop",
-  pub3: "https://images.unsplash.com/photo-1550950688-caecb1d1876f?q=80&w=1600&auto=format&fit=crop",
+  pub1: "/services/publico1.png",
+  pub2: "/services/publico2.png",
+  pub3: "/services/publico3.png",
 
-  gas1: "https://images.unsplash.com/photo-1600423115367-5f2cfdc0b5a3?q=80&w=1600&auto=format&fit=crop",
-  gas2: "https://images.unsplash.com/photo-1581094478071-16b0082e3d87?q=80&w=1600&auto=format&fit=crop",
-  gas3: "https://images.unsplash.com/photo-1581093588401-9f9d52d18a3d?q=80&w=1600&auto=format&fit=crop",
+  gas1: "/services/gas1.png",
+  gas2: "/services/gas2.png",
+  gas3: "/services/gas3.png",
 
-  vid1: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1600&auto=format&fit=crop",
-  vid2: "https://images.unsplash.com/photo-1509395176047-4a66953fd231?q=80&w=1600&auto=format&fit=crop",
-  vid3: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=1600&auto=format&fit=crop",
+  vid1: "/services/vidrio1.png",
+  vid2: "/services/vidrio2.png",
+  vid3: "/services/vidrio3.png",
 };
 
 /* === Data de servicios === */
@@ -360,14 +360,15 @@ const ServicesPreview = () => {
   
   
   // === helper para descargar el PDF ===
-  function downloadPortfolio() {
-    const a = document.createElement("a");
-    a.href = PORTFOLIO_PDF_URL;              // /public/docs/Portafolio_SIRECC.pdf
-    a.download = "Portafolio_SIRECC.pdf";    // nombre del archivo al guardar
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
+function downloadPortfolio() {
+  const a = document.createElement("a");
+  a.href = PORTFOLIO_PDF_URL;
+  a.download = "Portafolio_SIRECC.pdf";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
 };
 
 export default ServicesPreview;

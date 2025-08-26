@@ -16,13 +16,7 @@ export default function ClientCard({ item, onOpen }) {
     >
       {/* Card base (glass) */}
       <div className="relative h-full rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm text-white">
-        {/* Glow de marca */}
-        <span
-          className="pointer-events-none absolute -inset-px rounded-2xl opacity-70 blur-md"
-          style={{ background: `linear-gradient(90deg, ${NAVY}, ${ORANGE})` }}
-          aria-hidden
-        />
-
+    
         {/* ====== Marca de agua (silueta del logo bien difuminada) ====== */}
         {item.logo && (
           <div className="absolute inset-0 pointer-events-none">
@@ -33,10 +27,10 @@ export default function ClientCard({ item, onOpen }) {
               aria-hidden="true"
               className="
                 absolute
-                right-[-8%] bottom-[-10%]
-                w-[68%] max-w-[520px]
+                right-[0%] bottom-[-10%]
+                w-[100%] max-w-[5}820px]
                 object-contain
-                opacity-[0.13]
+                opacity-[0.10]
                 mix-blend-overlay
               "
               style={{

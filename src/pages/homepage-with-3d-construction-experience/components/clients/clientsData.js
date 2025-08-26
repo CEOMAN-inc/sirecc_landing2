@@ -4,7 +4,7 @@ export const CLIENTS = [
     id: "san-rafael",
     name: "Clínica San Rafael (Steward Colombia)",
     sector: "Salud",
-    logo: "/assets/logos/san-rafael.png",
+    logo: "/assets/logos/Steward.png",
     summary:
       "Intervenciones en áreas críticas (UCI, urgencias, hospitalización y servicios).",
     bullets: [
@@ -20,7 +20,7 @@ export const CLIENTS = [
     id: "centenario",
     name: "Clínica El Centenario (Steward Colombia)",
     sector: "Salud",
-    logo: "/assets/logos/el-centenario.png",
+    logo: "/assets/logos/Steward.png",
     summary:
       "Cielorrasos y mantenimiento de acabados con pintura de asepsia en áreas críticas.",
     bullets: [
@@ -53,7 +53,7 @@ export const CLIENTS = [
     id: "maristas",
     name: "Comunidad Hermanos Maristas",
     sector: "Educación",
-    logo: "/assets/logos/maristas.png",
+    logo: "/assets/logos/hermanos.png",
     summary:
       "Mantenimiento integral de infraestructura institucional.",
     bullets: [
@@ -69,7 +69,7 @@ export const CLIENTS = [
     id: "caman",
     name: "CAMAN S.A.S",
     sector: "Industrial",
-    logo: "/assets/logos/caman.png",
+    logo: "/assets/logos/camman.png",
     summary: "Mantenimientos y adecuaciones locativas.",
     bullets: [
       "Reparaciones/arreglos locativos.",
@@ -81,7 +81,7 @@ export const CLIENTS = [
     id: "makariza",
     name: "MAKARIZA",
     sector: "Industria",
-    logo: "/assets/logos/makariza.png",
+    logo: "/assets/logos/maka.png",
     summary: "Mantenimientos preventivos y correctivos.",
     bullets: [
       "Redes eléctricas e hidrosanitarias.",
@@ -92,7 +92,7 @@ export const CLIENTS = [
     id: "gesticobranzas",
     name: "Gesticobranzas S.A.S",
     sector: "Servicios",
-    logo: "/assets/logos/gesticobranzas.png",
+    logo: "/assets/logos/gesti.png",
     summary: "Soporte integral a oficinas y TI.",
     bullets: [
       "Mantenimiento de puestos de trabajo y mobiliario.",
