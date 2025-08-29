@@ -13,7 +13,7 @@ const Header = ({ transparent = false }) => {
 
   const navigationItems = [
     { label: 'Inicio', path: '/homepage-with-3d-construction-experience', icon: 'Home' },
-    { label: 'Servicios', path: '/services-portfolio-showcase', icon: 'Wrench' },
+    { label: 'Servicios', path: '/services-overview', icon: 'Wrench' },
     { label: 'Proyectos', path: '/project-gallery-case-studies', icon: 'Building' },
     { label: 'Contacto', path: '/contact-quote-request', icon: 'Phone' }
   ];
